@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 transport = [
     {
@@ -181,13 +183,19 @@ def get_trips_by_id(trip_id):
     
 @app.route('/best-prices', methods=['POST'])
 def get_best_prices():
-    # endpoint that returns the cheapest and fastest trip according to the chosen city
-    destiny = request.json.get('destiny')
+   
+    destiny = request.json.get('city')
     if not destiny:
         return jsonify({'message':'Please, specify destination'}), 400
     
-    fast_travel = min(transport, key=lambda x: x['duration'])
-    economical_travel = min(transport, key=lambda x: x['price_econ'])
+    
+    filtered_transport = [trip for trip in transport if trip['city'] == destiny]
+    
+    if not filtered_transport:
+        return jsonify({'message':'No prices available for the selected destination'}), 400
+    
+    fast_travel = min(filtered_transport, key=lambda x: x.get('duration', float('inf')))
+    economical_travel = min(filtered_transport, key=lambda x: x.get('price_econ', float('inf')))
 
     return jsonify({
         'fast_travel': {
