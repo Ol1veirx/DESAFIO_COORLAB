@@ -169,48 +169,54 @@ transport = [
 
 @app.route('/trips', methods=['GET'])
 def get_trips():
-    # endpoint to return a list of transports with the necessary information for each one
-    return jsonify(transport)
-
+    try:
+      return jsonify(transport)
+    except Exception as ex:
+      return jsonify({'Error': str(ex)}), 500
+    
 @app.route('/trips/<int:trip_id>', methods=['GET'])
 def get_trips_by_id(trip_id):
-    # endpoint to return a specific transport according to the id
-    trip = next((trip for trip in transport if trip['id'] == trip_id), None)
-    if trip:
-        return jsonify(trip)
-    else:
-        return jsonify({'message': 'Trip not found'}), 404
+    try:
+      trip = next((trip for trip in transport if trip['id'] == trip_id), None)
+      if trip:
+          return jsonify(trip)
+      else:
+          return jsonify({'message': 'Trip not found'}), 404
+    except Exception as ex:
+      return jsonify({'Error': str(ex)}), 500
     
 @app.route('/best-prices', methods=['POST'])
 def get_best_prices():
-   
-    destiny = request.json.get('city')
-    if not destiny:
-        return jsonify({'message':'Please, specify destination'}), 400
-    
-    
-    filtered_transport = [trip for trip in transport if trip['city'] == destiny]
-    
-    if not filtered_transport:
-        return jsonify({'message':'No prices available for the selected destination'}), 400
-    
-    fast_travel = min(filtered_transport, key=lambda x: x.get('duration', float('inf')))
-    economical_travel = min(filtered_transport, key=lambda x: x.get('price_econ', float('inf')))
+    try:
+      destiny = request.json.get('city')
+      if not destiny:
+          return jsonify({'message':'Please, specify destination'}), 400
+      
+      
+      filtered_transport = [trip for trip in transport if trip['city'] == destiny]
+      
+      if not filtered_transport:
+          return jsonify({'message':'No prices available for the selected destination'}), 400
+      
+      fast_travel = min(filtered_transport, key=lambda x: x.get('duration', float('inf')))
+      economical_travel = min(filtered_transport, key=lambda x: x.get('price_econ', float('inf')))
 
-    return jsonify({
-        'fast_travel': {
-            'company_name': fast_travel['name'],
-            'bed': fast_travel['bed'],
-            'duration': fast_travel['duration'],
-            'total_price': fast_travel['price_confort']
-        },
-        'economical_travel': {
-            'company_name': economical_travel['name'],
-            'bed': economical_travel['bed'],
-            'duration': economical_travel['duration'],
-            'total_price': economical_travel['price_econ']
-        }
-    })
+      return jsonify({
+          'fast_travel': {
+              'company_name': fast_travel['name'],
+              'bed': fast_travel['bed'],
+              'duration': fast_travel['duration'],
+              'total_price': fast_travel['price_confort']
+          },
+          'economical_travel': {
+              'company_name': economical_travel['name'],
+              'bed': economical_travel['seat'],
+              'duration': economical_travel['duration'],
+              'total_price': economical_travel['price_econ']
+          }
+      })
+    except Exception as ex:
+      return jsonify({'Error': str(ex)}), 500
 
 if __name__ == '__main__':
-    app.run(port = 5000, host = 'localhost',debug=True)
+    app.run(port = 3000, host = 'localhost',debug=True)
